@@ -42,6 +42,7 @@ export default async function AdminLayout({ children }) {
         <Link href="/admin">Dashboard</Link>
         <Link href="/admin/bookings">Bookings</Link>
         <Link href="/admin/services">Services</Link>
+        <Link href="/admin/hours">Hours</Link>
       </div>
 
       {children}

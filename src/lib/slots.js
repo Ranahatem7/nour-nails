@@ -1,6 +1,6 @@
-import { WORKING_HOURS, SLOT_INTERVAL, CAPACITY } from "./config.js";
+import { SLOT_INTERVAL, CAPACITY } from "./config.js";
 
-// Convert "14:30" -> 870 (minutes since midnight). Makes math easy.
+// Convert "14:30" (or "14:30:00") -> 870 (minutes since midnight). Makes math easy.
 function timeToMinutes(time) {
   const [hours, mins] = time.split(":").map(Number);
   return hours * 60 + mins;
@@ -19,24 +19,23 @@ function overlaps(startA, endA, startB, endB) {
 }
 
 /**
- * Calculate available start times for a service on a given date.
+ * Calculate available start times for a service, given the day's working hours.
  *
- * @param {Date} date - the day being booked
+ * @param {{is_open: boolean, open_time: string, close_time: string}|null} dayHours -
+ *   the working_hours row for the day being booked (or null/is_open:false if closed).
+ *   Callers look this up from the DB by day-of-week before calling.
  * @param {number} serviceDuration - service length in minutes
  * @param {Array} existingBookings - [{ start_time, end_time }] already booked that day
  * @returns {string[]} available start times like ["12:00", "12:30", ...]
  */
-export function getAvailableSlots(date, serviceDuration, existingBookings = []) {
-  const dayOfWeek = date.getDay(); // 0 = Sunday ... 6 = Saturday
-  const hours = WORKING_HOURS[dayOfWeek];
-
+export function getAvailableSlots(dayHours, serviceDuration, existingBookings = []) {
   // Closed that day
-  if (!hours) {
+  if (!dayHours || !dayHours.is_open) {
     return [];
   }
 
-  const openMinutes = timeToMinutes(hours.open);
-  const closeMinutes = timeToMinutes(hours.close);
+  const openMinutes = timeToMinutes(dayHours.open_time);
+  const closeMinutes = timeToMinutes(dayHours.close_time);
 
   const bookedRanges = existingBookings.map((b) => ({
     start: timeToMinutes(b.start_time),

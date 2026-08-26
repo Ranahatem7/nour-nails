@@ -15,6 +15,11 @@ export default function BookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Working hours per day of week, keyed by day_of_week (0-6). Just 7 rows,
+  // so it's cheapest to fetch once and look up locally as the date changes.
+  const [workingHours, setWorkingHours] = useState({});
+  const [hoursLoaded, setHoursLoaded] = useState(false);
+
   // Load services once when the page mounts
   useEffect(() => {
     const loadServices = async () => {
@@ -28,14 +33,30 @@ export default function BookingPage() {
     loadServices();
   }, []);
 
+  // Load working hours once when the page mounts
+  useEffect(() => {
+    const loadWorkingHours = async () => {
+      const { data } = await supabase.from("working_hours").select("*");
+
+      const byDay = {};
+      (data || []).forEach((row) => {
+        byDay[row.day_of_week] = row;
+      });
+
+      setWorkingHours(byDay);
+      setHoursLoaded(true);
+    };
+    loadWorkingHours();
+  }, []);
+
   // The full service object for the selected id
   const selectedService = services.find((s) => s.id === selectedServiceId);
 
   // Recalculate slots whenever service or date changes
   useEffect(() => {
     const calculateSlots = async () => {
-      // Need both a service and a date
-      if (!selectedServiceId || !selectedDate) {
+      // Need a service, a date, and the working hours to have loaded
+      if (!selectedServiceId || !selectedDate || !hoursLoaded) {
         setSlots([]);
         return;
       }
@@ -54,9 +75,10 @@ export default function BookingPage() {
       // Parse the date string as a local date (avoid timezone drift)
       const [year, month, day] = selectedDate.split("-").map(Number);
       const dateObj = new Date(year, month - 1, day);
+      const dayHours = workingHours[dateObj.getDay()];
 
       const available = getAvailableSlots(
-        dateObj,
+        dayHours,
         selectedService.duration_minutes,
         existingBookings || []
       );
@@ -70,7 +92,7 @@ export default function BookingPage() {
     };
 
     calculateSlots();
-  }, [selectedServiceId, selectedDate]);
+  }, [selectedServiceId, selectedDate, hoursLoaded]);
 
   // Don't allow booking dates in the past
   const today = new Date().toISOString().split("T")[0];
@@ -99,9 +121,10 @@ export default function BookingPage() {
 
     const [year, month, day] = selectedDate.split("-").map(Number);
     const dateObj = new Date(year, month - 1, day);
+    const dayHours = workingHours[dateObj.getDay()];
 
     const stillAvailable = getAvailableSlots(
-      dateObj,
+      dayHours,
       selectedService.duration_minutes,
       currentBookings || []
     );
@@ -145,7 +168,7 @@ export default function BookingPage() {
 
     // Recalculate slots so the just-booked slot reflects the new count
     const refreshed = getAvailableSlots(
-      dateObj,
+      dayHours,
       selectedService.duration_minutes,
       [
         ...(currentBookings || []),
