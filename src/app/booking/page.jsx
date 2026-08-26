@@ -177,6 +177,55 @@ export default function BookingPage() {
         </select>
       </div>
 
+      {/* Preview of the selected service */}
+      {selectedService && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          {selectedService.image_url ? (
+            <img
+              src={selectedService.image_url}
+              alt={selectedService.name}
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "cover",
+                borderRadius: "6px",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#2a2a2a",
+                color: "#999",
+                fontSize: "0.75rem",
+                textAlign: "center",
+                borderRadius: "6px",
+                padding: "0.25rem",
+              }}
+            >
+              No image
+            </div>
+          )}
+          <div>
+            <strong>{selectedService.name}</strong>
+            <p style={{ margin: 0 }}>
+              {selectedService.price} EGP · {selectedService.duration_minutes} min
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Step 2: choose a date */}
       <div style={{ marginBottom: "1rem" }}>
         <label>Date</label>

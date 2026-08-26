@@ -9,6 +9,7 @@ const EMPTY_FORM = {
   price: "",
   duration_minutes: "",
   is_active: true,
+  image_url: "",
 };
 
 export default function AdminServicesPage() {
@@ -17,11 +18,16 @@ export default function AdminServicesPage() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const [newService, setNewService] = useState(EMPTY_FORM);
+  const [newImageFile, setNewImageFile] = useState(null);
+  const [newImagePreview, setNewImagePreview] = useState("");
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(EMPTY_FORM);
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState("");
 
   const loadServices = async () => {
     setLoading(true);
@@ -44,10 +50,67 @@ export default function AdminServicesPage() {
     loadServices();
   }, []);
 
+  // Uploads a file to the service-images bucket and returns its public URL
+  const uploadImage = async (file) => {
+    const ext = file.name.split(".").pop();
+    const path = `${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("service-images")
+      .upload(path, file);
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("service-images").getPublicUrl(path);
+
+    return publicUrl;
+  };
+
+  const handleNewFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setNewImageFile(file);
+    setNewImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const handleEditFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setEditImageFile(file);
+    setEditImagePreview((prev) => {
+      if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
   const handleAdd = async () => {
     if (!newService.name || !newService.price || !newService.duration_minutes) {
       setMessage("Name, price, and duration are required.");
       return;
+    }
+
+    setMessage("");
+    let imageUrl = null;
+
+    if (newImageFile) {
+      setUploading(true);
+      try {
+        imageUrl = await uploadImage(newImageFile);
+      } catch (err) {
+        setMessage("Could not upload image: " + err.message);
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
     }
 
     const { error } = await supabase.from("services").insert({
@@ -56,6 +119,7 @@ export default function AdminServicesPage() {
       price: Number(newService.price),
       duration_minutes: Number(newService.duration_minutes),
       is_active: newService.is_active,
+      image_url: imageUrl,
     });
 
     if (error) {
@@ -64,7 +128,9 @@ export default function AdminServicesPage() {
     }
 
     setNewService(EMPTY_FORM);
-    setMessage("");
+    if (newImagePreview) URL.revokeObjectURL(newImagePreview);
+    setNewImageFile(null);
+    setNewImagePreview("");
     loadServices();
   };
 
@@ -76,15 +142,38 @@ export default function AdminServicesPage() {
       price: service.price,
       duration_minutes: service.duration_minutes,
       is_active: service.is_active,
+      image_url: service.image_url || "",
     });
+    setEditImageFile(null);
+    setEditImagePreview(service.image_url || "");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditForm(EMPTY_FORM);
+    if (editImagePreview && editImagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(editImagePreview);
+    }
+    setEditImageFile(null);
+    setEditImagePreview("");
   };
 
   const handleUpdate = async (id) => {
+    setMessage("");
+    let imageUrl = editForm.image_url || null;
+
+    if (editImageFile) {
+      setUploading(true);
+      try {
+        imageUrl = await uploadImage(editImageFile);
+      } catch (err) {
+        setMessage("Could not upload image: " + err.message);
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
     const { error } = await supabase
       .from("services")
       .update({
@@ -93,6 +182,7 @@ export default function AdminServicesPage() {
         price: Number(editForm.price),
         duration_minutes: Number(editForm.duration_minutes),
         is_active: editForm.is_active,
+        image_url: imageUrl,
       })
       .eq("id", id);
 
@@ -161,7 +251,21 @@ export default function AdminServicesPage() {
             />{" "}
             Active
           </label>
-          <button onClick={handleAdd}>Add service</button>
+          <div>
+            <label>Image</label>
+            <br />
+            <input type="file" accept="image/*" onChange={handleNewFileChange} />
+          </div>
+          {newImagePreview && (
+            <img
+              src={newImagePreview}
+              alt="Preview"
+              style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #444" }}
+            />
+          )}
+          <button onClick={handleAdd} disabled={uploading}>
+            {uploading ? "Uploading..." : "Add service"}
+          </button>
         </div>
       </div>
 
@@ -207,9 +311,25 @@ export default function AdminServicesPage() {
                   />{" "}
                   Active
                 </label>
+                <div>
+                  <label>Image</label>
+                  <br />
+                  <input type="file" accept="image/*" onChange={handleEditFileChange} />
+                </div>
+                {editImagePreview && (
+                  <img
+                    src={editImagePreview}
+                    alt="Preview"
+                    style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #444" }}
+                  />
+                )}
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => handleUpdate(service.id)}>Save</button>
-                  <button onClick={cancelEdit}>Cancel</button>
+                  <button onClick={() => handleUpdate(service.id)} disabled={uploading}>
+                    {uploading ? "Uploading..." : "Save"}
+                  </button>
+                  <button onClick={cancelEdit} disabled={uploading}>
+                    Cancel
+                  </button>
                 </div>
               </div>
             ) : (
@@ -217,6 +337,13 @@ export default function AdminServicesPage() {
                 <h3>
                   {service.name} {!service.is_active && "(inactive)"}
                 </h3>
+                {service.image_url && (
+                  <img
+                    src={service.image_url}
+                    alt={service.name}
+                    style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #444" }}
+                  />
+                )}
                 <p>{service.description}</p>
                 <p>
                   {service.price} EGP · {service.duration_minutes} min
