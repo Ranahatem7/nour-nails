@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
+import Spinner from "@/components/Spinner";
+import theme from "@/lib/theme";
 
 const EMPTY_FORM = {
   name: "",
@@ -208,32 +212,54 @@ export default function AdminServicesPage() {
     loadServices();
   };
 
+  const imageBoxStyle = {
+    width: "110px",
+    height: "110px",
+    objectFit: "cover",
+    borderRadius: theme.radii.sm,
+    border: `1px solid ${theme.colors.border}`,
+  };
+
   return (
     <div>
-      <h1>Manage Services</h1>
+      <h1 style={{ fontFamily: theme.fonts.heading, fontSize: "1.75rem", color: theme.colors.text, margin: "0 0 1.25rem" }}>
+        Manage Services
+      </h1>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p style={{ background: theme.colors.dangerBg, color: theme.colors.danger, padding: "0.6rem 0.9rem", borderRadius: theme.radii.sm, fontSize: "0.9rem" }}>
+          {message}
+        </p>
+      )}
 
-      <div style={{ border: "1px solid #444", padding: "1rem", margin: "1rem 0" }}>
-        <h3>Add a service</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "400px" }}>
-          <input
+      <div
+        style={{
+          background: theme.colors.surfaceAlt,
+          border: `1px solid ${theme.colors.border}`,
+          borderRadius: theme.radii.md,
+          padding: theme.spacing.lg,
+          margin: `${theme.spacing.md} 0 ${theme.spacing.xl}`,
+        }}
+      >
+        <h3 style={{ fontFamily: theme.fonts.heading, margin: "0 0 1rem", fontSize: "1.1rem" }}>Add a service</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm, maxWidth: "400px" }}>
+          <Input
             placeholder="Name"
             value={newService.name}
             onChange={(e) => setNewService({ ...newService, name: e.target.value })}
           />
-          <input
+          <Input
             placeholder="Description"
             value={newService.description}
             onChange={(e) => setNewService({ ...newService, description: e.target.value })}
           />
-          <input
+          <Input
             type="number"
             placeholder="Price (EGP)"
             value={newService.price}
             onChange={(e) => setNewService({ ...newService, price: e.target.value })}
           />
-          <input
+          <Input
             type="number"
             placeholder="Duration (minutes)"
             value={newService.duration_minutes}
@@ -241,116 +267,131 @@ export default function AdminServicesPage() {
               setNewService({ ...newService, duration_minutes: e.target.value })
             }
           />
-          <label>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
             <input
               type="checkbox"
               checked={newService.is_active}
               onChange={(e) =>
                 setNewService({ ...newService, is_active: e.target.checked })
               }
-            />{" "}
+            />
             Active
           </label>
           <div>
-            <label>Image</label>
-            <br />
+            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>
+              Image
+            </label>
             <input type="file" accept="image/*" onChange={handleNewFileChange} />
           </div>
-          {newImagePreview && (
-            <img
-              src={newImagePreview}
-              alt="Preview"
-              style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #444" }}
-            />
-          )}
-          <button onClick={handleAdd} disabled={uploading}>
-            {uploading ? "Uploading..." : "Add service"}
-          </button>
+          {newImagePreview && <img src={newImagePreview} alt="Preview" style={imageBoxStyle} />}
+          <Button onClick={handleAdd} disabled={uploading}>
+            {uploading ? (
+              <>
+                <Spinner size={14} /> Uploading...
+              </>
+            ) : (
+              "Add service"
+            )}
+          </Button>
         </div>
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div style={{ display: "flex", justifyContent: "center", padding: theme.spacing.xl }}>
+          <Spinner />
+        </div>
       ) : services.length === 0 ? (
-        <p>No services yet.</p>
+        <p style={{ color: theme.colors.textMuted }}>No services yet.</p>
       ) : (
         services.map((service) => (
           <div
             key={service.id}
-            style={{ border: "1px solid #444", padding: "1rem", marginBottom: "0.75rem" }}
+            style={{
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii.md,
+              boxShadow: theme.shadows.sm,
+              padding: theme.spacing.lg,
+              marginBottom: theme.spacing.md,
+            }}
           >
             {editingId === service.id ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "400px" }}>
-                <input
+              <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm, maxWidth: "400px" }}>
+                <Input
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 />
-                <input
+                <Input
                   value={editForm.description}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                 />
-                <input
+                <Input
                   type="number"
                   value={editForm.price}
                   onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
                 />
-                <input
+                <Input
                   type="number"
                   value={editForm.duration_minutes}
                   onChange={(e) =>
                     setEditForm({ ...editForm, duration_minutes: e.target.value })
                   }
                 />
-                <label>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
                   <input
                     type="checkbox"
                     checked={editForm.is_active}
                     onChange={(e) =>
                       setEditForm({ ...editForm, is_active: e.target.checked })
                     }
-                  />{" "}
+                  />
                   Active
                 </label>
                 <div>
-                  <label>Image</label>
-                  <br />
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>
+                    Image
+                  </label>
                   <input type="file" accept="image/*" onChange={handleEditFileChange} />
                 </div>
-                {editImagePreview && (
-                  <img
-                    src={editImagePreview}
-                    alt="Preview"
-                    style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #444" }}
-                  />
-                )}
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => handleUpdate(service.id)} disabled={uploading}>
-                    {uploading ? "Uploading..." : "Save"}
-                  </button>
-                  <button onClick={cancelEdit} disabled={uploading}>
+                {editImagePreview && <img src={editImagePreview} alt="Preview" style={imageBoxStyle} />}
+                <div style={{ display: "flex", gap: theme.spacing.sm }}>
+                  <Button onClick={() => handleUpdate(service.id)} disabled={uploading}>
+                    {uploading ? (
+                      <>
+                        <Spinner size={14} /> Uploading...
+                      </>
+                    ) : (
+                      "Save"
+                    )}
+                  </Button>
+                  <Button variant="ghost" onClick={cancelEdit} disabled={uploading}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div>
-                <h3>
-                  {service.name} {!service.is_active && "(inactive)"}
-                </h3>
-                {service.image_url && (
-                  <img
-                    src={service.image_url}
-                    alt={service.name}
-                    style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #444" }}
-                  />
-                )}
-                <p>{service.description}</p>
-                <p>
-                  {service.price} EGP · {service.duration_minutes} min
-                </p>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => startEdit(service)}>Edit</button>
-                  <button onClick={() => handleDelete(service.id)}>Delete</button>
+              <div style={{ display: "flex", gap: theme.spacing.lg, flexWrap: "wrap" }}>
+                {service.image_url && <img src={service.image_url} alt={service.name} style={imageBoxStyle} />}
+                <div style={{ flex: "1 1 200px" }}>
+                  <h3 style={{ fontFamily: theme.fonts.heading, margin: "0 0 0.3rem", fontSize: "1.1rem" }}>
+                    {service.name} {!service.is_active && (
+                      <span style={{ color: theme.colors.textMuted, fontWeight: 400, fontSize: "0.85rem" }}>(inactive)</span>
+                    )}
+                  </h3>
+                  <p style={{ color: theme.colors.textMuted, margin: "0 0 0.5rem", fontSize: "0.9rem" }}>
+                    {service.description}
+                  </p>
+                  <p style={{ margin: "0 0 0.9rem", fontWeight: 600, color: theme.colors.primary }}>
+                    {service.price} EGP · <span style={{ color: theme.colors.textMuted, fontWeight: 400 }}>{service.duration_minutes} min</span>
+                  </p>
+                  <div style={{ display: "flex", gap: theme.spacing.sm }}>
+                    <Button variant="outline" size="sm" onClick={() => startEdit(service)}>
+                      Edit
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(service.id)}>
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

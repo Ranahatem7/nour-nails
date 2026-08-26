@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
+import StatusBadge from "@/components/StatusBadge";
+import theme from "@/lib/theme";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
@@ -32,43 +34,67 @@ export default async function AdminDashboard() {
     0
   );
 
+  const stats = [
+    { label: "Today's Appointments", value: todayBookings?.length || 0 },
+    { label: "Upcoming Bookings", value: upcomingCount || 0 },
+    { label: "Revenue (completed)", value: `${revenue} EGP` },
+  ];
+
   return (
     <div>
-      <h1>Dashboard</h1>
+      <h1 style={{ fontFamily: theme.fonts.heading, fontSize: "1.75rem", color: theme.colors.text, margin: "0 0 1.25rem" }}>
+        Dashboard
+      </h1>
 
       {/* Stat cards */}
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1rem 0" }}>
-        <div style={{ border: "1px solid #444", padding: "1rem", minWidth: "140px" }}>
-          <p>Today's Appointments</p>
-          <h2>{todayBookings?.length || 0}</h2>
-        </div>
-
-        <div style={{ border: "1px solid #444", padding: "1rem", minWidth: "140px" }}>
-          <p>Upcoming Bookings</p>
-          <h2>{upcomingCount || 0}</h2>
-        </div>
-
-        <div style={{ border: "1px solid #444", padding: "1rem", minWidth: "140px" }}>
-          <p>Revenue (completed)</p>
-          <h2>{revenue} EGP</h2>
-        </div>
+      <div style={{ display: "flex", gap: theme.spacing.md, flexWrap: "wrap", marginBottom: theme.spacing.xl }}>
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            style={{
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii.md,
+              boxShadow: theme.shadows.sm,
+              padding: theme.spacing.lg,
+              minWidth: "160px",
+              flex: "1 1 160px",
+            }}
+          >
+            <p style={{ color: theme.colors.textMuted, margin: "0 0 0.4rem", fontSize: "0.85rem" }}>{stat.label}</p>
+            <h2 style={{ fontFamily: theme.fonts.heading, color: theme.colors.primary, margin: 0, fontSize: "1.75rem" }}>
+              {stat.value}
+            </h2>
+          </div>
+        ))}
       </div>
 
       {/* Today's schedule */}
-      <h2>Today's Schedule</h2>
+      <h2 style={{ fontFamily: theme.fonts.heading, fontSize: "1.25rem", color: theme.colors.text, margin: "0 0 0.75rem" }}>
+        Today's Schedule
+      </h2>
       {!todayBookings || todayBookings.length === 0 ? (
-        <p>No appointments today.</p>
+        <p style={{ color: theme.colors.textMuted }}>No appointments today.</p>
       ) : (
         todayBookings.map((b) => (
           <div
             key={b.id}
-            style={{ border: "1px solid #444", padding: "0.75rem", marginBottom: "0.5rem" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: theme.spacing.sm,
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii.sm,
+              padding: theme.spacing.sm,
+              marginBottom: theme.spacing.sm,
+            }}
           >
-            <strong>
+            <strong style={{ minWidth: "110px" }}>
               {b.start_time} – {b.end_time}
             </strong>
-            <span> · {b.services?.name}</span>
-            <span> · {b.status}</span>
+            <span style={{ color: theme.colors.textMuted }}>{b.services?.name}</span>
+            <StatusBadge status={b.status} />
           </div>
         ))
       )}

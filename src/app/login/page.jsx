@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
+import theme from "@/lib/theme";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,36 +38,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div>
-      <h1>Log in</h1>
+    <div style={{ minHeight: "70vh", display: "flex", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "380px",
+          background: theme.colors.surface,
+          border: `1px solid ${theme.colors.border}`,
+          borderRadius: theme.radii.lg,
+          boxShadow: theme.shadows.md,
+          padding: theme.spacing.xl,
+        }}
+      >
+        <h1
+          style={{
+            fontFamily: theme.fonts.heading,
+            fontSize: "1.75rem",
+            color: theme.colors.text,
+            textAlign: "center",
+            margin: "0 0 1.5rem",
+          }}
+        >
+          Welcome back
+        </h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && (
+          <p style={{ background: theme.colors.dangerBg, color: theme.colors.danger, padding: "0.6rem 0.9rem", borderRadius: theme.radii.sm, fontSize: "0.9rem", marginBottom: theme.spacing.md }}>
+            {error}
+          </p>
+        )}
 
-      <div>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div style={{ marginBottom: theme.spacing.md }}>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div style={{ marginBottom: theme.spacing.lg }}>
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <Button onClick={handleSubmit} disabled={loading} fullWidth>
+          {loading ? "Logging in..." : "Log in"}
+        </Button>
+
+        <p style={{ textAlign: "center", color: theme.colors.textMuted, fontSize: "0.9rem", marginTop: theme.spacing.lg }}>
+          No account?{" "}
+          <Link href="/register" style={{ color: theme.colors.primary, fontWeight: 600 }}>
+            Sign up
+          </Link>
+        </p>
       </div>
-
-      <div>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-
-      <button onClick={handleSubmit} disabled={loading}>
-        {loading ? "Logging in..." : "Log in"}
-      </button>
-
-      <p>
-        No account? <Link href="/register">Sign up</Link>
-      </p>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
+import ServiceCard from "@/components/ServiceCard";
+import theme from "@/lib/theme";
 
 export default async function ServicesPage() {
   const supabase = await createClient();
@@ -10,68 +12,35 @@ export default async function ServicesPage() {
     .order("price", { ascending: true });
 
   if (error) {
-    return <p>Could not load services.</p>;
+    return <p style={{ padding: theme.spacing.xl, textAlign: "center" }}>Could not load services.</p>;
   }
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1>Our Services</h1>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-          gap: "1rem",
-          marginTop: "1rem",
-        }}
-      >
-        {services.map((service) => (
-          <div
-            key={service.id}
-            style={{
-              border: "1px solid #444",
-              borderRadius: "6px",
-              overflow: "hidden",
-            }}
-          >
-            {service.image_url ? (
-              <img
-                src={service.image_url}
-                alt={service.name}
-                style={{
-                  width: "100%",
-                  height: "160px",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "160px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#2a2a2a",
-                  color: "#999",
-                  textAlign: "center",
-                  padding: "0.5rem",
-                }}
-              >
-                {service.name}
-              </div>
-            )}
-
-            <div style={{ padding: "1rem" }}>
-              <h3>{service.name}</h3>
-              <p>{service.description}</p>
-              <p>{service.price} EGP</p>
-              <p>{service.duration_minutes} min</p>
-            </div>
-          </div>
-        ))}
+    <div style={{ padding: `${theme.spacing.xl} ${theme.spacing.lg}`, maxWidth: "1100px", margin: "0 auto" }}>
+      <div style={{ textAlign: "center", marginBottom: theme.spacing.xl }}>
+        <h1 style={{ fontFamily: theme.fonts.heading, fontSize: "2.25rem", color: theme.colors.text, margin: "0 0 0.5rem" }}>
+          Our Services
+        </h1>
+        <p style={{ color: theme.colors.textMuted, margin: 0 }}>
+          Every treatment, priced and timed so you know exactly what to expect.
+        </p>
       </div>
+
+      {services.length === 0 ? (
+        <p style={{ textAlign: "center", color: theme.colors.textMuted }}>No services available right now.</p>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: theme.spacing.lg,
+          }}
+        >
+          {services.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
+import Spinner from "@/components/Spinner";
+import theme from "@/lib/theme";
 
 const DAY_NAMES = [
   "Sunday",
@@ -83,63 +87,97 @@ export default function AdminHoursPage() {
     loadHours();
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", padding: theme.spacing.xl }}>
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1>Working Hours</h1>
+      <h1 style={{ fontFamily: theme.fonts.heading, fontSize: "1.75rem", color: theme.colors.text, margin: "0 0 1.25rem" }}>
+        Working Hours
+      </h1>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p
+          style={{
+            background: message.startsWith("Hours saved") ? theme.colors.successBg : theme.colors.dangerBg,
+            color: message.startsWith("Hours saved") ? theme.colors.success : theme.colors.danger,
+            padding: "0.6rem 0.9rem",
+            borderRadius: theme.radii.sm,
+            fontSize: "0.9rem",
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          {message}
+        </p>
+      )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "550px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm, maxWidth: "560px" }}>
         {hours.map((day) => (
           <div
             key={day.day_of_week}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "1rem",
-              border: "1px solid #444",
-              padding: "0.75rem",
+              gap: theme.spacing.md,
+              flexWrap: "wrap",
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii.md,
+              padding: theme.spacing.sm,
             }}
           >
-            <strong style={{ width: "90px" }}>{DAY_NAMES[day.day_of_week]}</strong>
+            <strong style={{ width: "90px", fontFamily: theme.fonts.heading, fontSize: "0.95rem" }}>
+              {DAY_NAMES[day.day_of_week]}
+            </strong>
 
-            <label>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.9rem" }}>
               <input
                 type="checkbox"
                 checked={day.is_open}
                 onChange={(e) =>
                   updateDay(day.day_of_week, { is_open: e.target.checked })
                 }
-              />{" "}
+              />
               Open
             </label>
 
-            <input
+            <Input
               type="time"
               value={toInputTime(day.open_time)}
               disabled={!day.is_open}
               onChange={(e) =>
                 updateDay(day.day_of_week, { open_time: e.target.value })
               }
+              style={{ width: "auto" }}
             />
-            <span>to</span>
-            <input
+            <span style={{ color: theme.colors.textMuted }}>to</span>
+            <Input
               type="time"
               value={toInputTime(day.close_time)}
               disabled={!day.is_open}
               onChange={(e) =>
                 updateDay(day.day_of_week, { close_time: e.target.value })
               }
+              style={{ width: "auto" }}
             />
           </div>
         ))}
       </div>
 
-      <button onClick={handleSave} disabled={saving} style={{ marginTop: "1rem" }}>
-        {saving ? "Saving..." : "Save changes"}
-      </button>
+      <Button onClick={handleSave} disabled={saving} style={{ marginTop: theme.spacing.lg }}>
+        {saving ? (
+          <>
+            <Spinner size={14} /> Saving...
+          </>
+        ) : (
+          "Save changes"
+        )}
+      </Button>
     </div>
   );
 }

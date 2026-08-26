@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
+import Input from "@/components/Input";
+import Select from "@/components/Select";
+import Button from "@/components/Button";
+import StatusBadge from "@/components/StatusBadge";
+import Spinner from "@/components/Spinner";
+import theme from "@/lib/theme";
 
 const STATUS_OPTIONS = ["confirmed", "completed", "cancelled"];
 
@@ -69,25 +75,31 @@ export default function AdminBookingsPage() {
 
   return (
     <div>
-      <h1>Manage Bookings</h1>
+      <h1 style={{ fontFamily: theme.fonts.heading, fontSize: "1.75rem", color: theme.colors.text, margin: "0 0 1.25rem" }}>
+        Manage Bookings
+      </h1>
 
-      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end", margin: "1rem 0" }}>
+      <div style={{ display: "flex", gap: theme.spacing.md, alignItems: "flex-end", flexWrap: "wrap", marginBottom: theme.spacing.lg }}>
         <div>
-          <label>Filter by date</label>
-          <br />
-          <input
+          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>
+            Filter by date
+          </label>
+          <Input
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
+            style={{ width: "auto" }}
           />
         </div>
 
         <div>
-          <label>Filter by status</label>
-          <br />
-          <select
+          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>
+            Filter by status
+          </label>
+          <Select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
+            style={{ width: "auto" }}
           >
             <option value="">All</option>
             {STATUS_OPTIONS.map((s) => (
@@ -95,60 +107,70 @@ export default function AdminBookingsPage() {
                 {s}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         {(filterDate || filterStatus) && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setFilterDate("");
               setFilterStatus("");
             }}
           >
             Clear filters
-          </button>
+          </Button>
         )}
       </div>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p style={{ background: theme.colors.dangerBg, color: theme.colors.danger, padding: "0.6rem 0.9rem", borderRadius: theme.radii.sm, fontSize: "0.9rem" }}>
+          {message}
+        </p>
+      )}
 
       {loading ? (
-        <p>Loading...</p>
+        <div style={{ display: "flex", justifyContent: "center", padding: theme.spacing.xl }}>
+          <Spinner />
+        </div>
       ) : bookings.length === 0 ? (
-        <p>No bookings found.</p>
+        <p style={{ color: theme.colors.textMuted }}>No bookings found.</p>
       ) : (
         bookings.map((b) => (
           <div
             key={b.id}
             style={{
-              border: "1px solid #444",
-              padding: "1rem",
-              marginBottom: "0.75rem",
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii.md,
+              boxShadow: theme.shadows.sm,
+              padding: theme.spacing.md,
+              marginBottom: theme.spacing.sm,
             }}
           >
-            <p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: theme.spacing.sm }}>
               <strong>
                 {b.booking_date} · {b.start_time} – {b.end_time}
               </strong>
-            </p>
-            <p>Service: {b.services?.name}</p>
-            <p>
+              <StatusBadge status={b.status} />
+            </div>
+            <p style={{ margin: "0.5rem 0 0.2rem", color: theme.colors.text }}>Service: {b.services?.name}</p>
+            <p style={{ margin: "0 0 0.75rem", color: theme.colors.textMuted, fontSize: "0.9rem" }}>
               Customer: {b.profiles?.full_name || "Unknown"}
               {b.profiles?.phone ? ` · ${b.profiles.phone}` : ""}
             </p>
-            <p>
-              Status:{" "}
-              <select
-                value={b.status}
-                onChange={(e) => handleStatusChange(b.id, e.target.value)}
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </p>
+            <Select
+              value={b.status}
+              onChange={(e) => handleStatusChange(b.id, e.target.value)}
+              style={{ width: "auto" }}
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </Select>
           </div>
         ))
       )}

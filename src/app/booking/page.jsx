@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { getAvailableSlots } from "@/lib/slots";
+import Input from "@/components/Input";
+import Select from "@/components/Select";
+import Button from "@/components/Button";
+import SlotButton from "@/components/SlotButton";
+import Spinner from "@/components/Spinner";
+import theme from "@/lib/theme";
 
 export default function BookingPage() {
   const supabase = createClient();
@@ -179,122 +185,162 @@ export default function BookingPage() {
   };
 
   return (
-    <div style={{ padding: "1rem", maxWidth: "500px" }}>
-      <h1>Book an Appointment</h1>
+    <div style={{ padding: `${theme.spacing.xl} ${theme.spacing.lg}`, maxWidth: "560px", margin: "0 auto" }}>
+      <h1
+        style={{
+          fontFamily: theme.fonts.heading,
+          fontSize: "2rem",
+          color: theme.colors.text,
+          textAlign: "center",
+          margin: "0 0 1.75rem",
+        }}
+      >
+        Book an Appointment
+      </h1>
 
-      {/* Step 1: choose a service */}
-      <div style={{ marginBottom: "1rem" }}>
-        <label>Service</label>
-        <br />
-        <select
-          value={selectedServiceId}
-          onChange={(e) => setSelectedServiceId(e.target.value)}
-        >
-          <option value="">-- Select a service --</option>
-          {services.map((service) => (
-            <option key={service.id} value={service.id}>
-              {service.name} — {service.price} EGP ({service.duration_minutes}{" "}
-              min)
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Preview of the selected service */}
-      {selectedService && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            marginBottom: "1rem",
-          }}
-        >
-          {selectedService.image_url ? (
-            <img
-              src={selectedService.image_url}
-              alt={selectedService.name}
-              style={{
-                width: "80px",
-                height: "80px",
-                objectFit: "cover",
-                borderRadius: "6px",
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: "80px",
-                height: "80px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "#2a2a2a",
-                color: "#999",
-                fontSize: "0.75rem",
-                textAlign: "center",
-                borderRadius: "6px",
-                padding: "0.25rem",
-              }}
-            >
-              No image
-            </div>
-          )}
-          <div>
-            <strong>{selectedService.name}</strong>
-            <p style={{ margin: 0 }}>
-              {selectedService.price} EGP · {selectedService.duration_minutes} min
-            </p>
-          </div>
+      <div
+        style={{
+          background: theme.colors.surface,
+          border: `1px solid ${theme.colors.border}`,
+          borderRadius: theme.radii.lg,
+          boxShadow: theme.shadows.sm,
+          padding: theme.spacing.lg,
+        }}
+      >
+        {/* Step 1: choose a service */}
+        <div style={{ marginBottom: theme.spacing.md }}>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", fontSize: "0.9rem" }}>
+            Service
+          </label>
+          <Select
+            value={selectedServiceId}
+            onChange={(e) => setSelectedServiceId(e.target.value)}
+          >
+            <option value="">-- Select a service --</option>
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} — {service.price} EGP ({service.duration_minutes} min)
+              </option>
+            ))}
+          </Select>
         </div>
-      )}
 
-      {/* Step 2: choose a date */}
-      <div style={{ marginBottom: "1rem" }}>
-        <label>Date</label>
-        <br />
-        <input
-          type="date"
-          min={today}
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        />
-      </div>
-
-      {loadingSlots && <p>Loading slots...</p>}
-
-      {message && <p>{message}</p>}
-
-      {slots.length > 0 && (
-        <div>
-          <h3>Available times</h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {slots.map((slot) => (
-              <button
-                key={slot}
-                onClick={() => setSelectedSlot(slot)}
+        {/* Preview of the selected service */}
+        {selectedService && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: theme.spacing.md,
+              marginBottom: theme.spacing.md,
+              padding: theme.spacing.sm,
+              background: theme.colors.surfaceAlt,
+              borderRadius: theme.radii.md,
+            }}
+          >
+            {selectedService.image_url ? (
+              <img
+                src={selectedService.image_url}
+                alt={selectedService.name}
                 style={{
-                  fontWeight: selectedSlot === slot ? "bold" : "normal",
-                  padding: "0.5rem 1rem",
+                  width: "72px",
+                  height: "72px",
+                  objectFit: "cover",
+                  borderRadius: theme.radii.sm,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "72px",
+                  height: "72px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: theme.colors.border,
+                  color: theme.colors.textMuted,
+                  fontSize: "0.7rem",
+                  textAlign: "center",
+                  borderRadius: theme.radii.sm,
+                  padding: "0.25rem",
                 }}
               >
-                {slot}
-              </button>
-            ))}
+                No image
+              </div>
+            )}
+            <div>
+              <strong style={{ fontFamily: theme.fonts.heading, fontSize: "1.05rem" }}>
+                {selectedService.name}
+              </strong>
+              <p style={{ margin: "0.2rem 0 0", color: theme.colors.textMuted, fontSize: "0.9rem" }}>
+                {selectedService.price} EGP · {selectedService.duration_minutes} min
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {selectedSlot && (
-        <div style={{ marginTop: "1rem" }}>
-          <p>
-            {selectedService?.name} on {selectedDate} at {selectedSlot}
-          </p>
-          <button onClick={handleBooking} style={{ padding: "0.5rem 1rem" }}>
-            Confirm booking
-          </button>
+        {/* Step 2: choose a date */}
+        <div style={{ marginBottom: theme.spacing.md }}>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", fontSize: "0.9rem" }}>
+            Date
+          </label>
+          <Input
+            type="date"
+            min={today}
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          />
         </div>
-      )}
+
+        {loadingSlots && (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: theme.colors.textMuted }}>
+            <Spinner /> Loading slots...
+          </div>
+        )}
+
+        {message && (
+          <p
+            style={{
+              padding: "0.6rem 0.9rem",
+              borderRadius: theme.radii.sm,
+              background: message.startsWith("Booked!") ? theme.colors.successBg : theme.colors.dangerBg,
+              color: message.startsWith("Booked!") ? theme.colors.success : theme.colors.danger,
+              fontSize: "0.9rem",
+            }}
+          >
+            {message}
+          </p>
+        )}
+
+        {slots.length > 0 && (
+          <div>
+            <h3 style={{ fontFamily: theme.fonts.heading, fontSize: "1.1rem", margin: "0 0 0.75rem" }}>
+              Available times
+            </h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+              {slots.map((slot) => (
+                <SlotButton
+                  key={slot}
+                  time={slot}
+                  selected={selectedSlot === slot}
+                  onClick={() => setSelectedSlot(slot)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedSlot && (
+          <div style={{ marginTop: theme.spacing.lg }}>
+            <p style={{ color: theme.colors.textMuted, marginBottom: theme.spacing.sm }}>
+              {selectedService?.name} on {selectedDate} at {selectedSlot}
+            </p>
+            <Button onClick={handleBooking} fullWidth size="lg">
+              Confirm booking
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
