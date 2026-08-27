@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import Input from "@/components/Input";
@@ -10,11 +10,16 @@ import theme from "@/lib/theme";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(
+    searchParams.get("error") === "auth"
+      ? "That confirmation link didn't work — it may have expired. Please log in, or sign up again."
+      : null
+  );
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {

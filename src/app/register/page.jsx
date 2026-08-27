@@ -17,13 +17,15 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setError(null);
+    setInfo(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -31,6 +33,7 @@ export default function RegisterPage() {
           full_name: fullName,
           phone: phone,
         },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -41,8 +44,14 @@ export default function RegisterPage() {
       return;
     }
 
-    // Success — send them to the services page
-    router.push("/services");
+    if (data.session) {
+      // Email confirmation is off — already logged in
+      router.push("/services");
+      router.refresh();
+    } else {
+      // Email confirmation required — nothing to log in to yet
+      setInfo("Check your email to confirm your account — you'll be logged in automatically once you do.");
+    }
   };
 
   return (
@@ -73,6 +82,12 @@ export default function RegisterPage() {
         {error && (
           <p style={{ background: theme.colors.dangerBg, color: theme.colors.danger, padding: "0.6rem 0.9rem", borderRadius: theme.radii.sm, fontSize: "0.9rem", marginBottom: theme.spacing.md }}>
             {error}
+          </p>
+        )}
+
+        {info && (
+          <p style={{ background: theme.colors.successBg, color: theme.colors.success, padding: "0.6rem 0.9rem", borderRadius: theme.radii.sm, fontSize: "0.9rem", marginBottom: theme.spacing.md }}>
+            {info}
           </p>
         )}
 

@@ -21,6 +21,11 @@ export default function BookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Contact details for this booking — prefilled from the customer's profile
+  // (if set) but editable, since the salon needs a reliable name/phone per booking.
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+
   // Working hours per day of week, keyed by day_of_week (0-6). Just 7 rows,
   // so it's cheapest to fetch once and look up locally as the date changes.
   const [workingHours, setWorkingHours] = useState({});
@@ -53,6 +58,27 @@ export default function BookingPage() {
       setHoursLoaded(true);
     };
     loadWorkingHours();
+  }, []);
+
+  // Prefill contact details from the logged-in customer's profile, if set
+  useEffect(() => {
+    const loadProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.full_name) setCustomerName(profile.full_name);
+      if (profile?.phone) setCustomerPhone(profile.phone);
+    };
+    loadProfile();
   }, []);
 
   // The full service object for the selected id
@@ -118,6 +144,11 @@ export default function BookingPage() {
       return;
     }
 
+    if (!customerName.trim() || !customerPhone.trim()) {
+      setMessage("Please enter your name and phone number.");
+      return;
+    }
+
     // Re-validate availability RIGHT NOW (the slot may have filled since load)
     const { data: currentBookings } = await supabase
       .from("bookings")
@@ -159,6 +190,8 @@ export default function BookingPage() {
       start_time: selectedSlot,
       end_time: endTime,
       status: "confirmed",
+      customer_name: customerName.trim(),
+      customer_phone: customerPhone.trim(),
     });
 
     if (error) {
@@ -332,9 +365,38 @@ export default function BookingPage() {
 
         {selectedSlot && (
           <div style={{ marginTop: theme.spacing.lg }}>
-            <p style={{ color: theme.colors.textMuted, marginBottom: theme.spacing.sm }}>
+            <p style={{ color: theme.colors.textMuted, marginBottom: theme.spacing.md }}>
               {selectedService?.name} on {selectedDate} at {selectedSlot}
             </p>
+
+            <h3 style={{ fontFamily: theme.fonts.heading, fontSize: "1.1rem", margin: "0 0 0.75rem" }}>
+              Your Details
+            </h3>
+
+            <div style={{ marginBottom: theme.spacing.sm }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", fontSize: "0.9rem" }}>
+                Name
+              </label>
+              <Input
+                type="text"
+                placeholder="Your name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginBottom: theme.spacing.lg }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", fontSize: "0.9rem" }}>
+                Phone number
+              </label>
+              <Input
+                type="tel"
+                placeholder="Your phone number"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+              />
+            </div>
+
             <Button onClick={handleBooking} fullWidth size="lg">
               Confirm booking
             </Button>

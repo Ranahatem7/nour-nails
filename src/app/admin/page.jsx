@@ -11,7 +11,7 @@ export default async function AdminDashboard() {
   // Today's bookings (with service info), earliest first
   const { data: todayBookings } = await supabase
     .from("bookings")
-    .select("id, start_time, end_time, status, services ( name, price )")
+    .select("id, start_time, end_time, status, customer_name, customer_phone, services ( name, price )")
     .eq("booking_date", today)
     .neq("status", "cancelled")
     .order("start_time", { ascending: true });
@@ -82,6 +82,7 @@ export default async function AdminDashboard() {
             style={{
               display: "flex",
               alignItems: "center",
+              flexWrap: "wrap",
               gap: theme.spacing.sm,
               background: theme.colors.surface,
               border: `1px solid ${theme.colors.border}`,
@@ -94,6 +95,10 @@ export default async function AdminDashboard() {
               {b.start_time} – {b.end_time}
             </strong>
             <span style={{ color: theme.colors.textMuted }}>{b.services?.name}</span>
+            <span style={{ color: theme.colors.textMuted }}>
+              · {b.customer_name || "Unknown"}
+              {b.customer_phone ? ` · ${b.customer_phone}` : ""}
+            </span>
             <StatusBadge status={b.status} />
           </div>
         ))

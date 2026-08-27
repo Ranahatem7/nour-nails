@@ -33,6 +33,8 @@ export default function AdminBookingsPage() {
         start_time,
         end_time,
         status,
+        customer_name,
+        customer_phone,
         services ( name, price ),
         profiles ( full_name, phone )
       `
@@ -157,8 +159,8 @@ export default function AdminBookingsPage() {
             </div>
             <p style={{ margin: "0.5rem 0 0.2rem", color: theme.colors.text }}>Service: {b.services?.name}</p>
             <p style={{ margin: "0 0 0.75rem", color: theme.colors.textMuted, fontSize: "0.9rem" }}>
-              Customer: {b.profiles?.full_name || "Unknown"}
-              {b.profiles?.phone ? ` · ${b.profiles.phone}` : ""}
+              Customer: {b.customer_name || b.profiles?.full_name || "Unknown"}
+              {(b.customer_phone || b.profiles?.phone) ? ` · ${b.customer_phone || b.profiles?.phone}` : ""}
             </p>
             <Select
               value={b.status}
