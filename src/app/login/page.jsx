@@ -38,7 +38,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/services");
+    router.push("/");
     router.refresh(); // refresh server components so they see the logged-in state
   };
 

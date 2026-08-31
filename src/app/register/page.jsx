@@ -46,7 +46,7 @@ export default function RegisterPage() {
 
     if (data.session) {
       // Email confirmation is off — already logged in
-      router.push("/services");
+      router.push("/");
       router.refresh();
     } else {
       // Email confirmation required — nothing to log in to yet
